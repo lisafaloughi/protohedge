@@ -1,4 +1,4 @@
-> **Note from Contributor**  
+> **Note**  
 > This repository is a modified version of the original [Deep Hedging](https://github.com/hansbuehler/deephedging) framework developed by Hans Buehler and contributors.  
 > My primary contribution is the integration of **prototype-based interpretability** into the agent model to better understand and explain the actions taken by Deep Hedging agents.  
 > All original credit goes to the authors of the original project. This fork is an extension built for academic and research purposes, with deep appreciation and respect for the original work.
