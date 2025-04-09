@@ -16,7 +16,7 @@ This fork introduces a new interpretable agent for Deep Hedging by integrating *
 -  Includes logic to **explain each action** based on the most similar prototype, making the model's hedging strategy more transparent.
 -  Modifications are contained within a new agent class and layer, preserving compatibility with the original Deep Hedging codebase.
 
-This project is part of ongoing academic research on **explainable AI (XAI)** for trading and financial decision-making.
+This project is part of ongoing Master Thesis at Imperial on **explainable AI (XAI)** for risk managemnent and financial decision-making.
 
 ---
 
