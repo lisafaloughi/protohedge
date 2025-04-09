@@ -5,16 +5,16 @@
 
 ---
 
-## 🧠 About This Fork
+## About This Fork
 
 This fork introduces a new interpretable agent for Deep Hedging by integrating **prototype-based explanation** techniques, inspired by the [ProtoPNet](https://arxiv.org/abs/1902.05300) architecture ("This Looks Like That").
 
 ### 🔍 Key contributions:
-- 📌 **`ClusteredProtoLayer`**: a new model layer that uses **KMeans clustering** to learn prototypes from historical market features (`price`, `delta`, `time_left`, etc.).  
-- 🔄 Each prototype is associated with a **trainable action vector**, enabling the model to take actions based on similarity to learned, interpretable states.
-- 🎯 At inference time, the agent selects actions based on proximity to one or more of these interpretable prototype vectors.
-- 🧠 Includes logic to **explain each action** based on the most similar prototype, making the model's hedging strategy more transparent.
-- 🛠️ Modifications are contained within a new agent class and layer, preserving compatibility with the original Deep Hedging codebase.
+-  **`ClusteredProtoLayer`**: a new model layer that uses **KMeans clustering** to learn prototypes from historical market features (`price`, `delta`, `time_left`, etc.).  
+-  Each prototype is associated with a **trainable action vector**, enabling the model to take actions based on similarity to learned, interpretable states.
+-  At inference time, the agent selects actions based on proximity to one or more of these interpretable prototype vectors.
+-  Includes logic to **explain each action** based on the most similar prototype, making the model's hedging strategy more transparent.
+-  Modifications are contained within a new agent class and layer, preserving compatibility with the original Deep Hedging codebase.
 
 This project is part of ongoing academic research on **explainable AI (XAI)** for trading and financial decision-making.
 
