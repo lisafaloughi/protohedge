@@ -7,7 +7,7 @@
 
 ## About This Fork
 
-This fork introduces a new interpretable agent for Deep Hedging by integrating **prototype-based explanation** techniques, inspired by the [ProtoPNet](https://arxiv.org/abs/1902.05300) architecture ("This Looks Like That").
+This fork introduces a new interpretable agent for Deep Hedging by integrating **prototype-based explanation** techniques, inspired by the [ProtoPNet](https://arxiv.org/abs/1806.10574) architecture ("This Looks Like That").
 
 ### 🔍 Key contributions:
 -  **`ClusteredProtoLayer`**: a new model layer that uses **KMeans clustering** to learn prototypes from historical market features (`price`, `delta`, `time_left`, etc.).  
