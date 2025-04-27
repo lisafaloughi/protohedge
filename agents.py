@@ -389,17 +389,9 @@ def AgentFactory( nInst : int, config : Config, name : str = None, dtype=dh_dtyp
     agent       = None
     if agent_type in ["feed_forward", "dense_agent"]:
         agent = SimpleDenseAgent(nInst, config, name=name)
+
     elif agent_type == "protopnet":
-        # === Load Prototypes ===
-        proto_path = config("prototype_path", "./prototypes.pkl", str, "Path to saved prototypes file")
-        
-        _log.verify(os.path.exists(proto_path), f"Prototypes file not found at {proto_path}")
-        
-        with open(proto_path, "rb") as f:
-            prototypes = pickle.load(f)
-
-        # === Create ProtoAgent ===
         agent = ProtoAgent(nInst, config, name=name)
-
+        
     _log.verify(agent is not None, "Unknown agent type '%s'", agent_type)
     return agent 
