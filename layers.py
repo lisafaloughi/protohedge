@@ -246,8 +246,6 @@ class ClusteredProtoLayer(tf.keras.layers.Layer):
         )
 
     def call(self, x):  # x shape: [batch, proto_dim]
-
-        # tf.print("x sample:", x[:3], summarize=-1)
         
         x_exp = tf.expand_dims(x, axis=1)                    # [B, 1, D]
         p_exp = tf.expand_dims(self.prototypes, axis=0)      # [1, P, D]
@@ -255,15 +253,6 @@ class ClusteredProtoLayer(tf.keras.layers.Layer):
 
         similarities = tf.nn.softmax(-distances, axis=1)     # [B, P]
 
-        # tf.print("Distances:", distances[0], summarize=10)
-        # dist_to_218 = distances[:, 218]
-        # tf.print("Distance to prototype 218:", dist_to_218[:10])
-        # tf.print("Softmax similarities:", similarities[0], summarize=-1)
-
         actions = tf.matmul(similarities, self.prototype_actions)  # [B, action_dim]
 
-        # closest = tf.argmax(similarities, axis=1)
-        # tf.print("Closest prototypes:", closest[:10])
-        # tf.print("Final action:", actions[0], summarize=-1)
-        # tf.print("Max similarity:", tf.reduce_max(similarities[0]))
         return actions
