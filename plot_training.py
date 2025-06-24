@@ -18,6 +18,15 @@ from .base import Logger, fmt_seconds, mean, mean_bins, mean_cum_bins, perct_exp
 
 _log = Logger(__file__)
 
+import matplotlib.pyplot as plt
+
+plt.rcParams['axes.titlesize'] = 18        # Title of each subplot
+plt.rcParams['axes.labelsize'] = 16        # X and Y axis labels
+plt.rcParams['legend.fontsize'] = 14       # Legend text
+plt.rcParams['xtick.labelsize'] = 12       # X-axis tick labels
+plt.rcParams['ytick.labelsize'] = 12       # Y-axis tick labels
+
+
 colors = colors_tableau
 
 # -------------------------------------------------------
@@ -478,7 +487,7 @@ class Plotter(object):
         self.epoch_refresh    = config("epoch_refresh", 10, Int>0, "Epoch fefresh frequency for visualizations" )        
         self.fig_row_size     = config.fig("row_size", 5, Int>0, "Plot size of a row")
         self.fig_col_size     = config.fig("col_size", 5, Int>0, "Plot size of a column")
-        self.fig_col_nums     = config.fig("col_nums", 6, Int>0, "Number of columbs")
+        self.fig_col_nums     = config.fig("col_nums", 4, Int>0, "Number of columbs")
         self.err_dev          = config("err_dev", 1., Float>0., "How many standard errors to add to loss to assess best performance" )   
         self.lookback_window  = config("lookback_window", 200, Int>3, "Lookback window for determining y min/max in graphs.")
         self.show_epochs      = config("show_epochs", 100, Int>3,  "Maximum epochs displayed")
@@ -513,13 +522,21 @@ class Plotter(object):
                 print("\r\33[2K" + (""*100))  # clear any previous text in this line
                 update_plots = True
                 # create figure
-                self.fig                          = figure(row_size=self.fig_row_size, col_size=self.fig_col_size, col_nums=self.fig_col_nums, tight=True )
+                self.fig                          = figure(row_size=self.fig_row_size, col_size=self.fig_col_size, col_nums=self.fig_col_nums, tight=True)
                 
+                self.fig.tight_layout(pad=3)
+               
                 # by epoch
                 self.plot_loss_by_epoch           = Plot_Loss_By_Epoch(    fig=self.fig, title="Losses (recent)", epochs=training_info.epochs, err_dev=self.err_dev, lookback_window=self.lookback_window, show_epochs=self.show_epochs )
                 self.plot_loss_by_epoch_all       = Plot_Loss_By_Epoch(    fig=self.fig, title="Losses (all)", epochs=training_info.epochs, err_dev=self.err_dev, lookback_window=self.lookback_window, show_epochs=training_info.epochs )
                 self.plot_gains_utility_by_epoch  = Plot_Utility_By_Epoch( fig=self.fig, name="Model Gains", label="gains", err_dev=self.err_dev, epochs=training_info.epochs, lookback_window=self.lookback_window, show_epochs=self.show_epochs )
                 self.plot_payoff_utility_by_epoch = Plot_Utility_By_Epoch( fig=self.fig, name="Original Payoff", label="payoff", err_dev=self.err_dev, epochs=training_info.epochs, lookback_window=self.lookback_window, show_epochs=self.show_epochs )
+                
+                                
+                                
+                self.fig.next_row()
+
+
                 self.plot_memory_by_epoch         = Plot_Memory_By_Epoch(  fig=self.fig, epochs=training_info.epochs )
     
                 self.fig.next_row()
@@ -532,6 +549,8 @@ class Plotter(object):
                 self.plot_returns_by_spot_adj_ret_std  = Plot_Returns_By_Spot_Ret(      fig=self.fig, title = "Returns less Utility (with std)\n(training set)", bins=self.bins, with_std=True )
                 self.plot_utility_by_cumpercentile     = Plot_Utility_By_CumPercentile( fig=self.fig, title = "Utility by cummulative percentile\n(training set)", bins=self.bins )
                 
+                self.fig.next_row()
+
                 # by performance - validation
                 self.val_plot_returns_by_spot_adj_ret  = Plot_Returns_By_Spot_Ret(      fig=self.fig, title = "Returns less Utility\n(validation set)", bins=self.bins, with_std=False )
                 self.val_plot_returns_by_spot_adj_ret_std = Plot_Returns_By_Spot_Ret(      fig=self.fig, title = "Returns less Utility (with std)\n(validation set)", bins=self.bins, with_std=True )
@@ -546,6 +565,9 @@ class Plotter(object):
                 self.plot_action0_by_step          = Plot_Activity_By_Spot_and_Time(    fig=self.fig, title="Spot action by time step\n(training set)", bins=self.bins, slices=self.time_slices, which_inst=0, with_std = False )
                 self.plot_delta0_by_step           = Plot_Activity_By_Spot_and_Time(    fig=self.fig, title="Spot delta by time step\n(training set)", bins=self.bins, slices=self.time_slices, which_inst=0, with_std = False )
                 # activity by spot, with std
+
+                self.fig.next_row()
+
                 self.plot_action0_by_step_std      = Plot_Activity_By_Spot_and_Time(    fig=self.fig, title="Spot action by time step (with std)\n(training set)", bins=self.bins, slices=self.time_slices, which_inst=0, with_std = True )
                 self.plot_delta0_by_step_std       = Plot_Activity_By_Spot_and_Time(    fig=self.fig, title="Spot delta by time step (with std)\n(training set)", bins=self.bins, slices=self.time_slices, which_inst=0, with_std = True )
     
@@ -554,7 +576,7 @@ class Plotter(object):
             if update_plots:
                 # update live graphics
                 # --------------------
-                self.fig.suptitle("Learning to Trade, epoch %ld / %ld" % (progress_data.epoch+1,training_info.epochs), fontsize=20)
+                # self.fig.suptitle("Learning to Trade, epoch %ld / %ld" % (progress_data.epoch+1,training_info.epochs), fontsize=20)
                 
                 # by epoch
                 self.plot_loss_by_epoch.update( epoch=progress_data.epoch, losses=progress_data.losses, loss_errs=progress_data.losses_err, best_epoch=progress_data.best_epoch, best_loss=progress_data.best_loss )
