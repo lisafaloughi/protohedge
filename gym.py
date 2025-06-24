@@ -49,6 +49,7 @@ class VanillaDeepHedgingGym(tf.keras.Model):
         seed                       = config.tensorflow("seed", 423423423, int, "Set tensor random seed. Leave to None if not desired.")
         self.softclip              = DHSoftClip( config.environment )
         self.config_agent          = config.agent.detach()
+        self.agent_type            = config.agent("agent_type", "feed_forward")
         self.config_objective      = config.objective.detach()
         self.user_version          = config("user_version", None, help="An arbitrary string which can be used to identify a particular gym. Changing this value will generate a new cache key")
         self.agent                 = None
@@ -180,7 +181,8 @@ class VanillaDeepHedgingGym(tf.keras.Model):
             action, state_ =  self.agent( live_features, training=training )
             _log.verify( action.shape.as_list() == [nBatch, nInst], "Error: action return by agent: expected shape %s, found %s", [nBatch, nInst], action.shape.as_list() )
             action         += idelta
-            action         =  self.softclip(action, lbnd_a[:,t,:], ubnd_a[:,t,:] )
+            if self.agent_type != "protopnet":
+                action = self.softclip(action, lbnd_a[:,t,:], ubnd_a[:,t,:])
             state          =  state_ if self.agent.is_recurrent else state
             delta          += action
 

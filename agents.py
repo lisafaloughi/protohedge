@@ -299,6 +299,7 @@ class ProtoAgent(tf.keras.layers.Layer):
         self.proto_layer = ClusteredProtoLayer(
             nInst=self.nInst,
             prototypes=self.prototypes,
+            config=config,
             name=name + "_proto_layer"
         )
         config.done()

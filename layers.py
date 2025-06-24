@@ -8,6 +8,8 @@ June 30, 2022
 
 from .base import Logger, Config, tf, dh_dtype, tf_glorot_value, Int, Float, DIM_DUMMY# NOQA
 from collections.abc import Mapping, Sequence # NOQA
+import tensorflow as tf
+from .softclip import DHSoftClip
 import numpy as np
 _log = Logger(__file__)
 
@@ -232,27 +234,63 @@ class DenseLayer(tf.keras.layers.Layer):
         return np.sum( [ np.prod( w.get_shape() ) for w in weights ] )
 
 class ClusteredProtoLayer(tf.keras.layers.Layer):
-    def __init__(self, nInst, prototypes, name=None):
+    def __init__(self, nInst, prototypes, config, name=None):
         super().__init__(name=name)
         self.nInst = nInst
         self.prototypes = tf.convert_to_tensor(prototypes, dtype=tf.float32)
 
-        # One action per prototype: shape (n_prototypes, nInst)
-        self.prototype_actions = self.add_weight(
+        # Feature weighting for distance computation
+        D = self.prototypes.shape[1]
+        weights = np.ones(D, dtype=np.float32)
+        weights[-1] = 5.0  # Emphasize 'time_left' feature
+        self.feature_weights = tf.constant(weights)
+
+        # Dynamically determine bounds depending on the world type
+        if nInst==1:  # BS: only spot tradable
+            lbnd_as = config("lbnd_as", -5.0)
+            ubnd_as = config("ubnd_as",  5.0)
+            self.lbnd = tf.constant([lbnd_as], dtype=tf.float32)
+            self.ubnd = tf.constant([ubnd_as], dtype=tf.float32)
+        else:  # Stochastic: spot and ATM option
+            lbnd_as = config("lbnd_as", -5.0)
+            ubnd_as = config("ubnd_as",  5.0)
+            lbnd_av = config("lbnd_av", -5.0)
+            ubnd_av = config("ubnd_av",  5.0)
+            self.lbnd = tf.constant([lbnd_as, lbnd_av], dtype=tf.float32)
+            self.ubnd = tf.constant([ubnd_as, ubnd_av], dtype=tf.float32)
+
+        # Initialize softclip layer with environment config
+        self.softclip = DHSoftClip(config.environment)
+
+        # Trainable unbounded prototype actions
+        self.prototype_actions_unbounded = self.add_weight(
             shape=(self.prototypes.shape[0], self.nInst),
             initializer='random_normal',
             trainable=True,
-            name='proto_actions'
+            name='proto_actions_unbounded'
         )
 
-    def call(self, x):  # x shape: [batch, proto_dim]
-        
-        x_exp = tf.expand_dims(x, axis=1)                    # [B, 1, D]
-        p_exp = tf.expand_dims(self.prototypes, axis=0)      # [1, P, D]
-        distances = tf.reduce_sum(tf.square(x_exp - p_exp), axis=2)  # [B, P]
+    def call(self, x):  # x shape: [B, D]
+        x_exp = tf.expand_dims(x, axis=1)  # [B, 1, D]
+        p_exp = tf.expand_dims(self.prototypes, axis=0)  # [1, P, D]
 
-        similarities = tf.nn.softmax(-distances, axis=1)     # [B, P]
+        # distances = tf.reduce_sum(tf.square(x_exp - p_exp), axis=2)  # [B, P]
+           
+        # Apply feature WEIGHTS to difference
+        diff = x_exp - p_exp
+        weighted_diff = diff * self.feature_weights  # [B, P, D]
+        distances = tf.reduce_sum(tf.square(weighted_diff), axis=2)  # [B, P]
 
-        actions = tf.matmul(similarities, self.prototype_actions)  # [B, action_dim]
+
+        similarities = tf.nn.softmax(-distances, axis=1)  # [B, P]
+
+        # Apply softclip to prototype actions
+        bounded = self.softclip(self.prototype_actions_unbounded, self.lbnd, self.ubnd)  # [P, nInst]
+        actions = tf.matmul(similarities, bounded)  # [B, nInst]
 
         return actions
+
+    @property
+    def prototype_actions(self):
+        """Return softclipped prototype actions (interpretable form)"""
+        return self.softclip(self.prototype_actions_unbounded, self.lbnd, self.ubnd)
