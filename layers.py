@@ -241,9 +241,14 @@ class ClusteredProtoLayer(tf.keras.layers.Layer):
 
         # Feature weighting for distance computation
         D = self.prototypes.shape[1]
-        weights = np.ones(D, dtype=np.float32)
-        weights[-1] = 5.0  # Emphasize 'time_left' feature
-        self.feature_weights = tf.constant(weights)
+        init_weights = np.ones(D, dtype=np.float32)  # Equal importance at start
+        self.feature_weights = self.add_weight(
+            name="feature_weights",
+            shape=(D,),
+            initializer=tf.constant_initializer(init_weights),
+            trainable=True,
+            dtype=tf.float32,
+        )
 
         # Dynamically determine bounds depending on the world type
         if nInst==1:  # BS: only spot tradable
