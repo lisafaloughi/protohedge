@@ -239,16 +239,24 @@ class ClusteredProtoLayer(tf.keras.layers.Layer):
         self.nInst = nInst
         self.prototypes = tf.convert_to_tensor(prototypes, dtype=tf.float32)
 
-        # Feature weighting for distance computation
+
+        # MLP to project into latent space
         D = self.prototypes.shape[1]
-        init_weights = np.ones(D, dtype=np.float32)  # Equal importance at start
-        self.feature_weights = self.add_weight(
-            name="feature_weights",
-            shape=(D,),
-            initializer=tf.constant_initializer(init_weights),
-            trainable=True,
-            dtype=tf.float32,
-        )
+        self.pre_mlp = tf.keras.Sequential([
+            tf.keras.layers.Dense(32, activation='relu'),
+            tf.keras.layers.Dense(D)
+        ])
+
+        # Feature weighting for distance computation
+        # D = self.prototypes.shape[1]
+        # init_weights = np.ones(D, dtype=np.float32)  # Equal importance at start
+        # self.feature_weights = self.add_weight(
+        #     name="feature_weights",
+        #     shape=(D,),
+        #     initializer=tf.constant_initializer(init_weights),
+        #     trainable=True,
+        #     dtype=tf.float32,
+        # )
 
         # Dynamically determine bounds depending on the world type
         if nInst==1:  # BS: only spot tradable
@@ -276,17 +284,15 @@ class ClusteredProtoLayer(tf.keras.layers.Layer):
         )
 
     def call(self, x):  # x shape: [B, D]
-        x_exp = tf.expand_dims(x, axis=1)  # [B, 1, D]
-        p_exp = tf.expand_dims(self.prototypes, axis=0)  # [1, P, D]
+        # Project input and prototypes into latent space
+        x_latent = self.pre_mlp(x)  # shape: [B, D]
+        x_exp = tf.expand_dims(x_latent, axis=1)  # [B, 1, D]
 
-        # distances = tf.reduce_sum(tf.square(x_exp - p_exp), axis=2)  # [B, P]
-           
-        # Apply feature WEIGHTS to difference
-        diff = x_exp - p_exp
-        weighted_diff = diff * self.feature_weights  # [B, P, D]
-        distances = tf.reduce_sum(tf.square(weighted_diff), axis=2)  # [B, P]
+        # Project prototypes into latent space
+        projected_prototypes = self.pre_mlp(self.prototypes)
+        p_exp = tf.expand_dims(projected_prototypes, axis=0)  # [1, P, D]
 
-
+        distances = tf.reduce_sum(tf.square(x_exp - p_exp), axis=2)  # [B, P]
         similarities = tf.nn.softmax(-distances, axis=1)  # [B, P]
 
         # Apply softclip to prototype actions
