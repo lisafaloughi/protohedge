@@ -130,3 +130,24 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Cached / generated models and results
+notebooks/.deephedging_cache/
+notebooks/prototypes_storage/
+notebooks/results.pkl
+notebooks/stoch_results.pkl
+
+# Checkpoints / training runs
+**/checkpoints/
+**/runs/
+
+# Large model files
+*.ckpt
+*.h5
+*.pt
+*.pkl
+*.npz
+
+# Data (optional: keep only placeholders/readme)
+data/*
+!data/README.md
