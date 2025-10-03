@@ -151,3 +151,6 @@ notebooks/stoch_results.pkl
 # Data (optional: keep only placeholders/readme)
 data/*
 !data/README.md
+
+# VS Code
+.vscode/
